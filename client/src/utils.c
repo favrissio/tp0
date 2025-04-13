@@ -1,6 +1,5 @@
 #include "utils.h"
 
-
 void* serializar_paquete(t_paquete* paquete, int bytes)
 {
 	void * magic = malloc(bytes);
@@ -18,6 +17,8 @@ void* serializar_paquete(t_paquete* paquete, int bytes)
 
 int crear_conexion(char *ip, char* puerto)
 {
+	int err;
+	
 	struct addrinfo hints;
 	struct addrinfo *server_info;
 
@@ -31,8 +32,22 @@ int crear_conexion(char *ip, char* puerto)
 	// Ahora vamos a crear el socket.
 	int socket_cliente = 0;
 
-	// Ahora que tenemos el socket, vamos a conectarlo
+	socket_cliente = socket(server_info->ai_family,
+                            server_info->ai_socktype,
+                            server_info->ai_protocol);
 
+	if(socket_cliente == -1){
+		 error_show("No se pudo crear socket del cliente");
+		 abort();
+	}						
+
+	// Ahora que tenemos el socket, vamos a conectarlo
+    err = connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen);
+
+	if (err == -1) {
+    	error_show("No se pudo hacer connect");
+    	abort();
+	}
 
 	freeaddrinfo(server_info);
 
@@ -105,4 +120,24 @@ void eliminar_paquete(t_paquete* paquete)
 void liberar_conexion(int socket_cliente)
 {
 	close(socket_cliente);
+}
+
+void handshake_cliente(int socket_cliente, t_log* logger){
+
+    size_t bytes;
+	int32_t handshake = 1;
+	int32_t result;
+
+	bytes = send(socket_cliente, &handshake, sizeof(int32_t), 0);
+	log_info(logger, "bytes enviados %lu", bytes);
+	bytes = recv(socket_cliente, &result, sizeof(int32_t), MSG_WAITALL);
+	log_info(logger, "bytes recibidos %lu", bytes);
+
+	if (result == 0) {
+    	// Handshake OK
+		log_info(logger, "Handshake OK");
+	} else {
+    	// Handshake ERROR
+		log_info(logger, "Handshake ERROR");
+	}
 }

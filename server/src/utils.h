@@ -10,13 +10,14 @@
 #include<commons/collections/list.h>
 #include<string.h>
 #include<assert.h>
+#include<commons/error.h>
 
 #define PUERTO "4444"
 
 typedef enum
 {
 	MENSAJE,
-	PAQUETE
+	PAQUETE,
 }op_code;
 
 extern t_log* logger;
@@ -28,5 +29,6 @@ int esperar_cliente(int);
 t_list* recibir_paquete(int);
 void recibir_mensaje(int);
 int recibir_operacion(int);
+void handshake_server(int);
 
 #endif /* UTILS_H_ */
